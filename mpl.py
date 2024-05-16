@@ -28,29 +28,7 @@ def pinhole_projection(point_3d, camera_params):
     pixel_x = (projection_x + sensor_width / 2)
     pixel_y = (sensor_height / 2 - projection_y)
     
-    return np.array([pixel_x, pixel_y])
-
-def plot_projection(point_3d, point_2d):
-    """
-    Plot the 3D point and its projection on a 2D image plane.
-    
-    Args:
-    - point_3d: A numpy array representing the 3D point in Cartesian coordinates (x, y, z).
-    - point_2d: A numpy array representing the 2D projection of the 3D point on the image plane.
-    """
-    plt.figure()
-    
-    # Plot the 3D point
-    plt.plot(point_3d[0], point_3d[1], 'bo', label='3D Point')
-    
-    # Plot the projection
-    plt.plot(point_2d[0], point_2d[1], 'ro', label='2D Projection')
-    
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.gca().invert_yaxis()  # Invert y-axis to match image coordinates
-    plt.legend()
-    
+    return np.array([pixel_x, pixel_y]) 
 
 def main():
     # Define the 3D point and camera parameters
@@ -65,7 +43,7 @@ def main():
     
     plt.figure()
 
-    for point in point_array:
+    for index, point in enumerate(point_array):
         # For each point in the point cloud
         point_3d = point
         # Project the 3D point onto the 2D image plane
@@ -76,6 +54,7 @@ def main():
         
         # Plot the projection
         plt.plot(point_2d[0], point_2d[1], 'ro', label='2D Projection')
+        print(index)
 
     plt.xlabel('X')
     plt.ylabel('Y')
