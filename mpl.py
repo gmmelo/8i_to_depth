@@ -32,7 +32,7 @@ def pinhole_projection(point_3d, camera_params):
 
 def main():
     # Define the 3D point and camera parameters
-    point_load = o3d.io.read_point_cloud("./longdress_vox10_1051.ply")
+    point_load = o3d.io.read_point_cloud("./teapot.ply")
     point_array = np.asarray(point_load.points)   # Example 3D point
 
     camera_params = {
