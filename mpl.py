@@ -55,26 +55,5 @@ def main():
     plt.scatter(x_list, y_list)
     plt.show()
 
-    # TODO: REMOVE UNUSED CODE
-    # plt.figure()
-
-    # for index, point in enumerate(point_array):
-    #     # For each point in the point cloud
-    #     point_3d = point
-    #     # Project the 3D point onto the 2D image plane
-    #     point_2d = pinhole_projection(point_3d, camera_params)
-        
-    #     # Plot the 3D point
-    #     plt.plot(point_3d[0], point_3d[1], 'bo', label='3D Point')
-        
-    #     # Plot the projection
-    #     plt.plot(point_2d[0], point_2d[1], 'ro', label='2D Projection')
-        
-
-    # plt.xlabel('X')
-    # plt.ylabel('Y')
-    # plt.gca().invert_yaxis()  # Invert y-axis to match image coordinates
-    # plt.show()
-
 if __name__ == "__main__":
     main()
