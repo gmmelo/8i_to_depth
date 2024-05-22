@@ -32,7 +32,7 @@ def pinhole_projection(point_3d, camera_params):
 
 def main():
     # Define the 3D point and camera parameters
-    point_load = o3d.io.read_point_cloud("./teapot.ply")
+    point_load = o3d.io.read_point_cloud("./longdress_vox10_1051.ply")
     point_array = np.asarray(point_load.points)   # Example 3D point
 
     camera_params = {
@@ -41,25 +41,40 @@ def main():
         'sensor_height': 24,    # Height of the image sensor in mm (e.g., 35mm film)
     }
     
-    plt.figure()
+    # Rasterize the points and save them to a list
+    x_list = []
+    y_list = []
 
-    for index, point in enumerate(point_array):
-        # For each point in the point cloud
-        point_3d = point
-        # Project the 3D point onto the 2D image plane
-        point_2d = pinhole_projection(point_3d, camera_params)
-        
-        # Plot the 3D point
-        plt.plot(point_3d[0], point_3d[1], 'bo', label='3D Point')
-        
-        # Plot the projection
-        plt.plot(point_2d[0], point_2d[1], 'ro', label='2D Projection')
-        print(index)
+    for index, world_point in enumerate(point_array):
+        raster_point = pinhole_projection(world_point, camera_params)
+        x_list.append(raster_point[0])
+        y_list.append(raster_point[1])
+        print("point " , index , " successfully processed.")
 
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.gca().invert_yaxis()  # Invert y-axis to match image coordinates
+    # Draw them as an image
+    plt.scatter(x_list, y_list)
     plt.show()
+
+    # TODO: REMOVE UNUSED CODE
+    # plt.figure()
+
+    # for index, point in enumerate(point_array):
+    #     # For each point in the point cloud
+    #     point_3d = point
+    #     # Project the 3D point onto the 2D image plane
+    #     point_2d = pinhole_projection(point_3d, camera_params)
+        
+    #     # Plot the 3D point
+    #     plt.plot(point_3d[0], point_3d[1], 'bo', label='3D Point')
+        
+    #     # Plot the projection
+    #     plt.plot(point_2d[0], point_2d[1], 'ro', label='2D Projection')
+        
+
+    # plt.xlabel('X')
+    # plt.ylabel('Y')
+    # plt.gca().invert_yaxis()  # Invert y-axis to match image coordinates
+    # plt.show()
 
 if __name__ == "__main__":
     main()
