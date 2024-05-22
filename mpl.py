@@ -2,7 +2,7 @@ import numpy as np
 import open3d as o3d
 import matplotlib.pyplot as plt
 
-def pinhole_projection(point_3d, camera_params):
+def pinhole_projection(point_3d):
     """
     Project a 3D point onto a 2D image plane using the pinhole camera model.
     
@@ -16,9 +16,9 @@ def pinhole_projection(point_3d, camera_params):
     Returns:
     - A numpy array representing the 2D projection of the 3D point on the image plane.
     """
-    focal_length = camera_params['focal_length']
-    sensor_width = camera_params['sensor_width']
-    sensor_height = camera_params['sensor_height']
+    focal_length = 10
+    sensor_width = 36
+    sensor_height = 24
     
     # Project the 3D point onto the image plane
     projection_x = (focal_length * point_3d[0]) / point_3d[2]
@@ -34,22 +34,20 @@ def main():
     # Define the 3D point and camera parameters
     point_load = o3d.io.read_point_cloud("./longdress_vox10_1051.ply")
     point_array = np.asarray(point_load.points)   # Example 3D point
-
-    camera_params = {
-        'focal_length': 10,     # Focal length in mm
-        'sensor_width': 36,     # Width of the image sensor in mm (e.g., 35mm film)
-        'sensor_height': 24,    # Height of the image sensor in mm (e.g., 35mm film)
-    }
     
     # Rasterize the points and save them to a list
     x_list = []
     y_list = []
 
+    quarter_length = int(len(point_array)/4)
+    half_length = int(len(point_array)/2)
+    three_quarter_length = int(3*len(point_array)/4)
     for index, world_point in enumerate(point_array):
-        raster_point = pinhole_projection(world_point, camera_params)
+        raster_point = pinhole_projection(world_point)
         x_list.append(raster_point[0])
         y_list.append(raster_point[1])
-        print("point " , index , " successfully processed.")
+        if (index == quarter_length or index == half_length or index == three_quarter_length):
+            print("point " , index , " successfully processed.")
 
     # Draw them as an image
     plt.scatter(x_list, y_list)
