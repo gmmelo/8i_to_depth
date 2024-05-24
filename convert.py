@@ -21,8 +21,8 @@ def pinhole_projection(point_3d):
     sensor_height = 24
     
     # Project the 3D point onto the image plane
-    projection_x = (focal_length * point_3d[0]) / point_3d[2]
-    projection_y = (focal_length * point_3d[1]) / point_3d[2]
+    projection_x = (focal_length * point_3d[0]) / (point_3d[2] + 1000)
+    projection_y = (focal_length * point_3d[1]) / (point_3d[2] + 1000)
     projection_h = np.sqrt(point_3d[0] ** 2 + point_3d[1] ** 2)
     
     # Convert to pixel coordinates
@@ -34,7 +34,7 @@ def pinhole_projection(point_3d):
 
 def main():
     # Define the 3D point and camera parameters
-    point_load = o3d.io.read_point_cloud("./monkey.ply")
+    point_load = o3d.io.read_point_cloud("./longdress.ply")
     point_array = np.asarray(point_load.points)   # Example 3D point
     
     # Rasterize the points and save them to a list
