@@ -1,6 +1,6 @@
 import numpy as np
+from PIL import Image, ImageDraw
 import open3d as o3d
-import matplotlib.pyplot as plt
 
 def pinhole_projection(point_3d):
     """
@@ -19,10 +19,11 @@ def pinhole_projection(point_3d):
     focal_length = 10
     sensor_width = 36
     sensor_height = 24
+    camera_distance = 500
     
     # Project the 3D point onto the image plane
-    projection_x = (focal_length * point_3d[0]) / (point_3d[2] + 1000)
-    projection_y = (focal_length * point_3d[1]) / (point_3d[2] + 1000)
+    projection_x = (focal_length * point_3d[0]) / (point_3d[2] + camera_distance)
+    projection_y = (focal_length * point_3d[1]) / (point_3d[2] + camera_distance)
     projection_h = np.sqrt(point_3d[0] ** 2 + point_3d[1] ** 2)
     
     # Convert to pixel coordinates
@@ -55,9 +56,27 @@ def main():
         if (index == quarter_length or index == half_length or index == three_quarter_length):
             print("point " , index , " successfully processed.")
 
+    img_width = 1024
+    img_height = 1024
+    scale_factor = 40
+    color_factor = 0.3
+    x_offset = -400
+    y_offset = 300
+
+    depth_matrix = np.zeros((img_height, img_width, 3), np.uint8) # 1 because grayscale
+
+    for i in range(len(depth_list)):
+        x_position = x_list[i] * scale_factor + x_offset
+        y_position = y_list[i] * scale_factor + y_offset
+        color = np.clip(depth_list[i] * color_factor, 0, 255)
+        if ((x_position < img_width and x_position > 0) and (y_position < img_height and y_position > 0)):
+            if depth_matrix[int(y_position), int(x_position), 0] < color:
+                depth_matrix[int(y_position), int(x_position)] = [color, color, color]
+
+
     # Draw them as an image
-    plt.scatter(x_list, y_list, c = depth_list)
-    plt.show()
+    img = Image.fromarray(depth_matrix)
+    img.show()
 
 if __name__ == "__main__":
     main()
