@@ -72,6 +72,7 @@ def main():
     half_length = int(len(point_array)/2)
     three_quarter_length = int(3*len(point_array)/4)
 
+    # Loop through point cloud and add rasterized points to a list
     for index, world_point in enumerate(point_array):
         world_point_homogeneous = np.array([[world_point[0]],
                                             [world_point[1]],
@@ -85,24 +86,29 @@ def main():
         if (index == quarter_length or index == half_length or index == three_quarter_length):
             print("point " , index , " successfully processed.")
 
-    
-    depth_matrix = np.zeros((img_height_pixels, img_width_pixels, 3), np.uint8)
+    # Image matrix is for color data, depth matrix is form raw distance data
+    image_matrix = np.zeros((img_height_pixels, img_width_pixels, 3), np.uint8)
+    depth_matrix = np.full((img_height_pixels, img_width_pixels), -1, np.float64) # Fill with -1 as an invalid distance value
 
     depth_max = max(depth_list)
     depth_min = min(depth_list)
     depth_delta = depth_max - depth_min
 
+    # Paint the image from the list of 
     for i in range(len(depth_list)):
         x_position = x_list[i] * physical_to_pixels
         y_position = y_list[i] * physical_to_pixels
         color = 255 * (1 - (depth_list[i] - depth_min) / (depth_delta)) # normalize, scale to 0-255, and invert
         if ((x_position < img_width_pixels and x_position >= 0) and (y_position < img_height_pixels and y_position >= 0)):
-            if depth_matrix[int(y_position), int(x_position), 0] < color:
-                depth_matrix[int(y_position), int(x_position)] = color
+            if image_matrix[int(y_position), int(x_position), 0] < color:
+                image_matrix[int(y_position), int(x_position)] = color
+                depth_matrix[int(y_position), int(x_position)] = depth_list[i]
 
+    # Save raw depth as csv
+    np.savetxt("depth_matrix.csv", depth_matrix, delimiter=",")
 
     # Draw them as an image
-    img = Image.fromarray(depth_matrix)
+    img = Image.fromarray(image_matrix)
     img.show()
 
 if __name__ == "__main__":
