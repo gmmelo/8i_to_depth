@@ -43,8 +43,8 @@ def main():
     depth_list = np.empty(point_count)
     
     # Create the extrinsic matrix
-    camera_position_x = -200
-    camera_position_y = -500
+    camera_position_x = 0
+    camera_position_y = 0
     camera_position_z = 600
     # Rotation in euler angles
     camera_rotation_x = 0 / 180 * np.pi

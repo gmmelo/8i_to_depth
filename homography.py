@@ -1,4 +1,5 @@
 import numpy as np
+import open3d as o3d
 
 def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, column):
     focal_length_cm = 0.1
@@ -33,7 +34,7 @@ def screen_to_world(depth_matrix):
     point_counter = 0
     for column in depth_matrix:
         for point in column:
-            if point != -1: # Might need to add delta for equality assertion with float
+            if point >= 0:
                 point_counter += 1
 
     print("There are ", point_counter, " valid points") # Makes sure we are only counting the valid points
@@ -44,7 +45,7 @@ def screen_to_world(depth_matrix):
     index = 0
     for col_index, column in enumerate(depth_matrix):
         for row_index, point in enumerate(column):
-            if point != -1:
+            if point >= 0:
                 point_array[index] = inverse_pinhole(point, img_width_pixels, img_height_pixels, row_index, col_index)
                 index += 1
             
@@ -55,7 +56,9 @@ def main():
     depth_matrix = np.loadtxt(open("depth_matrix.csv", "rb"), delimiter=",") # Loads csv as 2D numpy array
     point_array = screen_to_world(depth_matrix)
     print("Point array's shape: ", point_array.shape)
-    np.savetxt("homemade_pointcloud.csv", point_array, delimiter=",", newline="\n")
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(point_array)
+    o3d.io.write_point_cloud("./homemade_pointcloud.ply", pcd)
 
 if __name__ == "__main__":
     main() 
