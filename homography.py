@@ -1,9 +1,17 @@
 import numpy as np
 
-def inverse_pinhole(point):
-    return point
+def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, column):
+    focal_length_cm = 0.1
+    img_width_cm = 0.24
+    img_height_cm = 0.24
+
+    world_point = screen_point # TODO: Calculate pinhole projection
+
+    return world_point
 
 def screen_to_world(depth_matrix):
+    img_height_pixels, img_width_pixels = depth_matrix.shape
+
     # Loop through the depth_matrix and figure out how many valid distance pixels there are (-1 is invalid)
     point_counter = 0
     for column in depth_matrix:
@@ -17,10 +25,10 @@ def screen_to_world(depth_matrix):
 
     # Loop through depth_matrix again, but only process valid points
     index = 0
-    for column in depth_matrix:
-        for point in column:
+    for col_index, column in enumerate(depth_matrix):
+        for row_index, point in enumerate(column):
             if point != -1:
-                point_array[index] = inverse_pinhole(point)
+                point_array[index] = inverse_pinhole(point, img_width_pixels, img_height_pixels, row_index, col_index)
                 index += 1
             
     return point_array
