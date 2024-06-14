@@ -34,8 +34,7 @@ def pinhole_projection(point_3d):
 
 def main():
     # Define the 3D point and camera parameters
-    point_load = o3d.io.read_point_cloud("./longdress.ply")
-    point_array = np.asarray(point_load.points)   # Example 3D point
+    point_array = np.loadtxt(open("homemade_pointcloud.csv", "rb"), delimiter=",") # Loads csv as 2D numpy array
     
     # Rasterize the points and save them to a list
     point_count = point_array.shape[0]

@@ -55,6 +55,7 @@ def main():
     depth_matrix = np.loadtxt(open("depth_matrix.csv", "rb"), delimiter=",") # Loads csv as 2D numpy array
     point_array = screen_to_world(depth_matrix)
     print("Point array's shape: ", point_array.shape)
+    np.savetxt("homemade_pointcloud.csv", point_array, delimiter=",", newline="\n")
 
 if __name__ == "__main__":
     main() 
