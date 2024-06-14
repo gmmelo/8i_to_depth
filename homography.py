@@ -4,8 +4,25 @@ def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, colu
     focal_length_cm = 0.1
     img_width_cm = 0.24
     img_height_cm = 0.24
+    px_to_cm_x = img_width_cm / float(img_width_pixels)
+    px_to_cm_y = img_height_cm / float(img_height_pixels)
 
-    world_point = screen_point # TODO: Calculate pinhole projection
+    screen_center_y_cm = img_height_cm / 2
+    screen_center_x_cm = img_width_cm / 2
+    
+    screen_x_cm = column * px_to_cm_x - screen_center_x_cm
+    screen_y_cm = row * px_to_cm_y - screen_center_y_cm
+
+    hipotenuse_screen = np.sqrt(screen_y_cm**2 + screen_x_cm**2)
+    distance_screen = np.sqrt(focal_length_cm**2 + hipotenuse_screen**2)
+
+    screen_world_ratio = screen_point / distance_screen
+
+    world_x = screen_x_cm * screen_world_ratio
+    world_y = screen_y_cm * screen_world_ratio
+    world_z = focal_length_cm * screen_world_ratio
+
+    world_point = np.asarray([world_x, world_y, world_z])
 
     return world_point
 
