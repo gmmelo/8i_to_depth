@@ -105,7 +105,7 @@ def main():
                 depth_matrix[int(y_position), int(x_position)] = depth_list[i]
 
     # Save raw depth as csv
-    np.savetxt("depth_matrix.csv", depth_matrix, delimiter=",")
+    np.savetxt("depth_matrix.csv", depth_matrix, delimiter=",", newline="\n")
 
     # Draw them as an image
     img = Image.fromarray(image_matrix)
