@@ -65,7 +65,8 @@ def main():
 
     world_to_camera = np.array([[n11, n12, n13, camera_position_x],
                                 [n21, n22, n23, camera_position_y],
-                                [n31, n32, n33, camera_position_z]])
+                                [n31, n32, n33, camera_position_z],
+                                [  0,   0,   0,                 1]])
 
     # Create progress markers
     quarter_length = int(len(point_array)/4)
