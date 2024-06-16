@@ -44,12 +44,12 @@ def main():
     depth_list = np.empty(point_count)
     
     # Create the extrinsic matrix
-    camera_position_x = -200
-    camera_position_y = -500
-    camera_position_z = 600
+    camera_position_x = 0
+    camera_position_y = 0
+    camera_position_z = 900
     # Rotation in euler angles
     camera_rotation_x = 0 / 180 * np.pi
-    camera_rotation_y = 80 / 180 * np.pi
+    camera_rotation_y = 0 / 180 * np.pi
     camera_rotation_z = 0 / 180 * np.pi
 
     # Defining the matrix cells for rotation in order z, y, x
@@ -59,14 +59,16 @@ def main():
     n21 = np.cos(camera_rotation_y) * np.sin(camera_rotation_x)
     n22 = np.sin(camera_rotation_z) * np.sin(camera_rotation_y) * np.sin(camera_rotation_x) + np.cos(camera_rotation_z) * np.cos(camera_rotation_x)
     n23 = np.cos(camera_rotation_z) * np.sin(camera_rotation_y) * np.sin(camera_rotation_x) - np.sin(camera_rotation_z) * np.cos(camera_rotation_x)
-    n31 = -np.sin(camera_position_y)
+    n31 = -np.sin(camera_rotation_y)
     n32 = np.sin(camera_rotation_z) * np.cos(camera_rotation_y)
     n33 = np.cos(camera_rotation_z) * np.cos(camera_rotation_y)
 
     camera1_extrinsic_matrix = np.array([[n11, n12, n13, camera_position_x],
-                                [n21, n22, n23, camera_position_y],
-                                [n31, n32, n33, camera_position_z],
-                                [  0,   0,   0,                 1]])
+                                         [n21, n22, n23, camera_position_y],
+                                         [n31, n32, n33, camera_position_z],
+                                         [  0,   0,   0,                 1]])
+
+    print("[DEBUG] Camera1 extrinsic matrix:\n", camera1_extrinsic_matrix)
 
     # Create progress markers
     quarter_length = int(len(point_array)/4)

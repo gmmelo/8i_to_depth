@@ -5,9 +5,10 @@ def save_to_point_cloud(point_array, filename):
     new_point_array = np.empty((point_array.size, 3), np.float64)
     
     for index, point in enumerate(point_array):
-        new_point_array[index][0] = point[0]
-        new_point_array[index][1] = point[1]
+        new_point_array[index][0] = point[1]
+        new_point_array[index][1] = -point[0]
         new_point_array[index][2] = point[2]
+        # Rubberband fix because of coordinate system differences
 
     new_point_cloud = o3d.geometry.PointCloud()
     new_point_cloud.points = o3d.utility.Vector3dVector(new_point_array)
@@ -83,6 +84,7 @@ def main():
     original_extrinsic_matrix = read_matrix("camera1_extrinsic_matrix.csv")
 
     point_array_original = screen_to_world(depth_matrix)
+    save_to_point_cloud(point_array_original, "original_point_cloud.ply")
     print("[DEBUG] Point array's shape: ", point_array_original.shape)
     inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
 
