@@ -10,6 +10,8 @@ def save_to_point_cloud(point_array, filename):
         new_point_array[index][2] = point[2]
 
     new_point_cloud = o3d.geometry.PointCloud()
+    new_point_cloud.points = o3d.utility.Vector3dVector(new_point_array)
+    o3d.io.write_point_cloud(filename, new_point_cloud)
     
 
 def read_matrix(filename):
