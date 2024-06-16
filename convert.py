@@ -47,9 +47,9 @@ def main():
     camera_position_y = 0
     camera_position_z = 600
     # Rotation in euler angles
-    camera_rotation_x = 0 / 180 * np.pi
-    camera_rotation_y = 80 / 180 * np.pi
-    camera_rotation_z = 0 / 180 * np.pi
+    camera_rotation_x = -90 / 180 * np.pi
+    camera_rotation_y = 0 / 180 * np.pi
+    camera_rotation_z = 90 / 180 * np.pi
 
     # Defining the matrix cells for rotation in order z, y, x
     n11 = np.cos(camera_rotation_y) * np.cos(camera_rotation_x)
