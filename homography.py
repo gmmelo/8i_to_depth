@@ -1,4 +1,16 @@
 import numpy as np
+import open3d as o3d
+
+def save_to_point_cloud(point_array, filename):
+    new_point_array = np.empty((point_array.size, 3), np.float64)
+    
+    for index, point in enumerate(point_array):
+        new_point_array[index][0] = point[0]
+        new_point_array[index][1] = point[1]
+        new_point_array[index][2] = point[2]
+
+    new_point_cloud = o3d.geometry.PointCloud()
+    
 
 def read_matrix(filename):
     matrix = np.loadtxt(open(filename, "rb"), delimiter = ",")
@@ -73,6 +85,7 @@ def main():
     inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
 
     point_array_world = transformed_point_cloud(point_array_original, inverse_original_extrinsic_matrix)
+    save_to_point_cloud(point_array_world, "camera1_visible_point_cloud.ply")
 
 
 if __name__ == "__main__":
