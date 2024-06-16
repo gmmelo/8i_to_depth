@@ -4,6 +4,15 @@ def read_matrix(filename):
     matrix = np.loadtxt(open(filename, "rb"), delimiter = ",")
     return matrix
 
+def transformed_point_cloud(point_array, transformation_matrix):
+    new_point_array = np.empty((point_array.size, 4), np.float64)
+
+    for index, point in enumerate(point_array):
+        new_point = transformation_matrix @ point
+        new_point_array[index] = new_point
+
+    return new_point_array
+
 def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, column):
     focal_length_cm = 0.1
     img_width_cm = 0.24
@@ -26,7 +35,7 @@ def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, colu
     world_y = screen_y_cm * screen_world_ratio
     world_z = focal_length_cm * screen_world_ratio
 
-    world_point = np.asarray([world_x, world_y, world_z])
+    world_point = np.asarray([world_x, world_y, world_z, 1])
 
     return world_point
 
@@ -42,7 +51,7 @@ def screen_to_world(depth_matrix):
 
     print("There are ", point_counter, " valid points") # Makes sure we are only counting the valid points
 
-    point_array = np.empty((point_counter, 3), np.float64) # Create an array only fit for the valid points. first row is for x, second is for y, and third for z
+    point_array = np.empty((point_counter, 4), np.float64) # Create an array only fit for the valid points. first row is for x, second is for y, third for z, and fourth for homogenous linear algebra
 
     # Loop through depth_matrix again, but only process valid points
     index = 0
@@ -61,6 +70,9 @@ def main():
 
     point_array_original = screen_to_world(depth_matrix)
     print("[DEBUG] Point array's shape: ", point_array_original.shape)
+    inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
+
+    point_array_world = transformed_point_cloud(point_array_original, inverse_original_extrinsic_matrix)
 
 
 if __name__ == "__main__":
