@@ -63,7 +63,7 @@ def main():
     n32 = np.sin(camera_rotation_z) * np.cos(camera_rotation_y)
     n33 = np.cos(camera_rotation_z) * np.cos(camera_rotation_y)
 
-    world_to_camera = np.array([[n11, n12, n13, camera_position_x],
+    camera1_extrinsic_matrix = np.array([[n11, n12, n13, camera_position_x],
                                 [n21, n22, n23, camera_position_y],
                                 [n31, n32, n33, camera_position_z],
                                 [  0,   0,   0,                 1]])
@@ -79,7 +79,7 @@ def main():
                                             [world_point[1]],
                                             [world_point[2]],
                                             [1]])
-        camera_point = world_to_camera @ world_point_homogeneous
+        camera_point = camera1_extrinsic_matrix @ world_point_homogeneous
         raster_point = pinhole_projection(camera_point)
         x_list[index] = raster_point[0]
         y_list[index] = raster_point[1]
@@ -107,6 +107,8 @@ def main():
 
     # Save raw depth as csv
     np.savetxt("depth_matrix.csv", depth_matrix, delimiter=",", newline="\n")
+    # Save extrinsic matrix for camera 1
+    np.savetxt("camera1_extrinsic_matrix.csv", camera1_extrinsic_matrix, delimiter=",", newline="\n")
 
     # Draw them as an image
     img = Image.fromarray(image_matrix)
