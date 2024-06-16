@@ -1,5 +1,9 @@
 import numpy as np
 
+def read_matrix(filename):
+    matrix = np.loadtxt(open(filename, "rb"), delimiter = ",")
+    return matrix
+
 def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, column):
     focal_length_cm = 0.1
     img_width_cm = 0.24
@@ -52,9 +56,12 @@ def screen_to_world(depth_matrix):
 
 
 def main():
-    depth_matrix = np.loadtxt(open("depth_matrix.csv", "rb"), delimiter=",") # Loads csv as 2D numpy array
-    point_array = screen_to_world(depth_matrix)
-    print("Point array's shape: ", point_array.shape)
+    depth_matrix = read_matrix("depth_matrix.csv") # Loads csv as 2D numpy array
+    original_extrinsic_matrix = read_matrix("camera1_extrinsic_matrix.csv")
+
+    point_array_original = screen_to_world(depth_matrix)
+    print("[DEBUG] Point array's shape: ", point_array_original.shape)
+
 
 if __name__ == "__main__":
     main() 
