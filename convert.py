@@ -21,13 +21,13 @@ def pinhole_projection(point_3d):
     """
     
     # Project the 3D point onto the image plane
-    projection_x = (focal_length_cm * point_3d[0][0]) / (point_3d[2][0])
-    projection_y = (focal_length_cm * point_3d[1][0]) / (point_3d[2][0])
+    projection_x = -(focal_length_cm * point_3d[0][0]) / (point_3d[2][0]) # Invert signal because of projection properties
+    projection_y = -(focal_length_cm * point_3d[1][0]) / (point_3d[2][0])
     projection_h = np.sqrt(point_3d[0][0] ** 2 + point_3d[1][0] ** 2)
     
     # Convert to pixel coordinates
     pixel_x = (projection_x + img_width_cm / 2)
-    pixel_y = (img_height_cm / 2 - projection_y)
+    pixel_y = (projection_y + img_height_cm / 2)
     pixel_depth = np.sqrt(projection_h ** 2 + point_3d[2][0] ** 2)
     
     return np.array([pixel_x, pixel_y, pixel_depth]) 
@@ -44,7 +44,7 @@ def main():
     depth_list = np.empty(point_count)
     
     # Create the extrinsic matrix
-    camera_position_x = 0
+    camera_position_x = -100
     camera_position_y = 0
     camera_position_z = 900
     # Rotation in euler angles
