@@ -79,16 +79,17 @@ def screen_to_world(depth_matrix):
 
 
 def main():
-    depth_matrix = read_matrix("depth_matrix.csv") # Loads csv as 2D numpy array
-    original_extrinsic_matrix = read_matrix("camera1_extrinsic_matrix.csv")
+    camera_count = 4
+    
+    for i in range(camera_count):
+        depth_matrix = read_matrix(f"depth_matrix_{i}.csv") # Loads csv as 2D numpy array
+        original_extrinsic_matrix = read_matrix(f"extrinsic_matrix_{i}.csv")
 
-    point_array_original = screen_to_world(depth_matrix)
-    save_to_point_cloud(point_array_original, "original_point_cloud.ply")
-    print("[DEBUG] Point array's shape: ", point_array_original.shape)
-    inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
+        point_array_original = screen_to_world(depth_matrix)
+        inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
 
-    point_array_world = transformed_point_cloud(point_array_original, inverse_original_extrinsic_matrix)
-    save_to_point_cloud(point_array_world, "camera1_visible_point_cloud.ply")
+        point_array_world = transformed_point_cloud(point_array_original, inverse_original_extrinsic_matrix)
+        save_to_point_cloud(point_array_world, f"visible_point_cloud_{i}.ply")
 
 
 if __name__ == "__main__":
