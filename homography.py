@@ -69,8 +69,8 @@ def screen_to_world(depth_matrix):
 
     # Loop through depth_matrix again, but only process valid points
     index = 0
-    for col_index, column in enumerate(depth_matrix):
-        for row_index, point in enumerate(column):
+    for row_index, row in enumerate(depth_matrix):
+        for col_index, point in enumerate(row):
             if point > 0:
                 point_array[index] = inverse_pinhole(point, img_width_pixels, img_height_pixels, row_index, col_index)
                 index += 1
