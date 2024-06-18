@@ -68,7 +68,8 @@ def main():
 
     for i in range(camera_count):
         point_array[i] = np.asarray(point_load.points)
-        camera_extrinsic_matrix[i] = extrinsic_matrix(0, -600, 500, 0, (360/(i+1)) % 360, 0) # Get a 360 view from <camera_count> cameras
+        current_z_rotation = 360 / camera_count * i
+        camera_extrinsic_matrix[i] = extrinsic_matrix(0, -600, 1200, 0, current_z_rotation, 0) # Get a 360 view from <camera_count> cameras
         print(f"[DEBUG] Camera[{i}] extrinsic matrix:\n", camera_extrinsic_matrix[i])
 
     # Create progress markers
