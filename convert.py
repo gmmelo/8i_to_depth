@@ -44,24 +44,24 @@ def main():
     depth_list = np.empty(point_count)
     
     # Create the extrinsic matrix
-    camera_position_x = -500
-    camera_position_y = -300
+    camera_position_x = -100
+    camera_position_y = -200
     camera_position_z = 900
     # Rotation in euler angles
-    camera_rotation_x = 0 / 180 * np.pi
-    camera_rotation_y = 0 / 180 * np.pi
     camera_rotation_z = 0 / 180 * np.pi
+    camera_rotation_y = 0 / 180 * np.pi
+    camera_rotation_x = 0 / 180 * np.pi
 
     # Defining the matrix cells for rotation in order z, y, x
-    n11 = np.cos(camera_rotation_y) * np.cos(camera_rotation_x)
-    n12 = np.sin(camera_rotation_z) * np.sin(camera_rotation_y) * np.cos(camera_rotation_x) - np.cos(camera_rotation_z) * np.sin(camera_rotation_x)
-    n13 = np.cos(camera_rotation_z) * np.sin(camera_rotation_y) * np.cos(camera_rotation_x) + np.sin(camera_rotation_z) * np.sin(camera_rotation_x)
-    n21 = np.cos(camera_rotation_y) * np.sin(camera_rotation_x)
-    n22 = np.sin(camera_rotation_z) * np.sin(camera_rotation_y) * np.sin(camera_rotation_x) + np.cos(camera_rotation_z) * np.cos(camera_rotation_x)
-    n23 = np.cos(camera_rotation_z) * np.sin(camera_rotation_y) * np.sin(camera_rotation_x) - np.sin(camera_rotation_z) * np.cos(camera_rotation_x)
+    n11 = np.cos(camera_rotation_y) * np.cos(camera_rotation_z)
+    n12 = np.sin(camera_rotation_x) * np.sin(camera_rotation_y) * np.cos(camera_rotation_z) - np.cos(camera_rotation_x) * np.sin(camera_rotation_z)
+    n13 = np.cos(camera_rotation_x) * np.sin(camera_rotation_y) * np.cos(camera_rotation_z) + np.sin(camera_rotation_x) * np.sin(camera_rotation_z)
+    n21 = np.cos(camera_rotation_y) * np.sin(camera_rotation_z)
+    n22 = np.sin(camera_rotation_x) * np.sin(camera_rotation_y) * np.sin(camera_rotation_z) + np.cos(camera_rotation_x) * np.cos(camera_rotation_z)
+    n23 = np.cos(camera_rotation_x) * np.sin(camera_rotation_y) * np.sin(camera_rotation_z) - np.sin(camera_rotation_x) * np.cos(camera_rotation_z)
     n31 = -np.sin(camera_rotation_y)
-    n32 = np.sin(camera_rotation_z) * np.cos(camera_rotation_y)
-    n33 = np.cos(camera_rotation_z) * np.cos(camera_rotation_y)
+    n32 = np.sin(camera_rotation_x) * np.cos(camera_rotation_y)
+    n33 = np.cos(camera_rotation_x) * np.cos(camera_rotation_y)
 
     camera1_extrinsic_matrix = np.array([[n11, n12, n13, camera_position_x],
                                          [n21, n22, n23, camera_position_y],
