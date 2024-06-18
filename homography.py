@@ -5,10 +5,9 @@ def save_to_point_cloud(point_array, filename):
     new_point_array = np.empty((point_array.size, 3), np.float64)
     
     for index, point in enumerate(point_array):
-        new_point_array[index][0] = point[1]
-        new_point_array[index][1] = -point[0]
+        new_point_array[index][0] = point[0]
+        new_point_array[index][1] = point[1]
         new_point_array[index][2] = point[2]
-        # Rubberband fix because of coordinate system differences
 
     new_point_cloud = o3d.geometry.PointCloud()
     new_point_cloud.points = o3d.utility.Vector3dVector(new_point_array)
@@ -61,18 +60,18 @@ def screen_to_world(depth_matrix):
     point_counter = 0
     for column in depth_matrix:
         for point in column:
-            if point != -1: # Might need to add delta for equality assertion with float
+            if point > 0:
                 point_counter += 1
 
     print("There are ", point_counter, " valid points") # Makes sure we are only counting the valid points
 
-    point_array = np.empty((point_counter, 4), np.float64) # Create an array only fit for the valid points. first row is for x, second is for y, third for z, and fourth for homogenous linear algebra
+    point_array = np.empty((point_counter, 4), np.float64) # Create an array only fit for the valid points. first column is for x, second is for y, third for z, and fourth for homogenous linear algebra
 
     # Loop through depth_matrix again, but only process valid points
     index = 0
     for col_index, column in enumerate(depth_matrix):
         for row_index, point in enumerate(column):
-            if point != -1:
+            if point > 0:
                 point_array[index] = inverse_pinhole(point, img_width_pixels, img_height_pixels, row_index, col_index)
                 index += 1
             
