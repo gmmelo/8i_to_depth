@@ -61,21 +61,15 @@ def pinhole_projection(point_3d):
 def main():
     # Define the 3D point and camera parameters
     point_load = o3d.io.read_point_cloud("./longdress.ply")
-    point_array = [[], [], [], []]
-    #  point_array = np.empty((camera_count, point_load.size), dtype = np.float64)
-    point_array[0] = point_array[1] = point_array[2] = point_array[3] = np.asarray(point_load.points)   # Example 3D point
-    
-    # Rasterize the points and save them to a list
-    point_count = point_array[0].shape[0]
-    x_list = np.empty(point_count)
-    y_list = np.empty(point_count)
-    depth_list = np.empty(point_count)
-    
+    point_count = len(point_load.points)
+    point_array = np.empty((camera_count, point_count, 3), dtype = np.float64)
+    screen_point_array = np.empty((camera_count, 3, point_count)) # For each camera, store x, y, and distance of each point in screen cm coordinates
     camera_extrinsic_matrix = np.empty((camera_count, 4, 4), dtype = np.float64)
-    for i in range(camera_count):
-        camera_extrinsic_matrix[i] = extrinsic_matrix(0, -600, 500, 0, 360/(i+1), 0)
 
-    print("[DEBUG] Camera[0] extrinsic matrix:\n", camera_extrinsic_matrix[0])
+    for i in range(camera_count):
+        point_array[i] = np.asarray(point_load.points)
+        camera_extrinsic_matrix[i] = extrinsic_matrix(0, -600, 500, 0, (360/(i+1)) % 360, 0) # Get a 360 view from <camera_count> cameras
+        print(f"[DEBUG] Camera[{i}] extrinsic matrix:\n", camera_extrinsic_matrix[i])
 
     # Create progress markers
     quarter_length = int(len(point_array[0])/4)
@@ -83,49 +77,50 @@ def main():
     three_quarter_length = int(3*len(point_array[0])/4)
 
     # Loop through point cloud and add rasterized points to a list
-    for camera_index, local_extrinsic_matrix in enumerate(camera_extrinsic_matrix):
-        for index, world_point in enumerate(point_array[camera_index]):
+    for camera_index in range(camera_count):
+        for point_index, world_point in enumerate(point_array[camera_index]):
             world_point_homogeneous = np.array([[world_point[0]],
                                                 [world_point[1]],
                                                 [world_point[2]],
                                                 [1]])
-            camera_point = local_extrinsic_matrix @ world_point_homogeneous
+            camera_point = camera_extrinsic_matrix[camera_index] @ world_point_homogeneous
             raster_point = pinhole_projection(camera_point)
-            x_list[index] = raster_point[0]
-            y_list[index] = raster_point[1]
-            depth_list[index] = raster_point[2]
-            if (index == quarter_length or index == half_length or index == three_quarter_length):
-                print("point " , index , " successfully processed.")
+            screen_point_array[camera_index][0][point_index] = raster_point[0] # Screen X (cm)
+            screen_point_array[camera_index][1][point_index] = raster_point[1] # Screen Y (cm)
+            screen_point_array[camera_index][2][point_index] = raster_point[2] # Point distance (cm)
+            if (point_index == quarter_length or point_index == half_length or point_index == three_quarter_length):
+                print(f"point {point_index} successfully processed for camera {camera_index}")
 
     # Image matrix is for color data, depth matrix is form raw distance data
-    image_matrix = np.zeros((img_height_pixels, img_width_pixels, 3), np.uint8)
-    depth_matrix = np.full((img_height_pixels, img_width_pixels), -1, np.float64) # Fill with -1 as an invalid distance value
+    image_matrix = np.zeros((camera_count, img_height_pixels, img_width_pixels, 3), np.uint8)
+    depth_matrix = np.full((camera_count, img_height_pixels, img_width_pixels), -1, np.float64) # Fill with -1 as an invalid distance value
 
-    depth_max = max(depth_list)
-    depth_min = min(depth_list)
-    depth_delta = depth_max - depth_min
+    depth_max = np.empty((camera_count))
+    depth_min = np.empty((camera_count))
+    depth_delta = np.empty((camera_count))
+    for i in range(camera_count):
+        depth_max[i] = max(screen_point_array[i][2])
+        depth_min[i] = min(screen_point_array[i][2])
+        depth_delta[i] = depth_max[i] - depth_min[i]
 
-    # Paint the image from the list of 
-    for i in range(len(depth_list)):
-        x_position = x_list[i] * physical_to_pixels
-        y_position = y_list[i] * physical_to_pixels
-        color = 255 * (1 - (depth_list[i] - depth_min) / (depth_delta)) # normalize, scale to 0-255, and invert
-        if ((x_position < img_width_pixels and x_position >= 0) and (y_position < img_height_pixels and y_position >= 0)):
-            if image_matrix[int(y_position), int(x_position), 0] < color:
-                image_matrix[int(y_position), int(x_position)] = color
-                depth_matrix[int(y_position), int(x_position)] = depth_list[i]
+    # Paint the image
+    for i in range(camera_count):
+        for j in range(point_count):
+            x_position = int(screen_point_array[i][0][j] * physical_to_pixels)
+            y_position = int(screen_point_array[i][1][j] * physical_to_pixels)
+            depth = screen_point_array[i][2][j]
+            color = 255 * (1 - (depth - depth_min[i]) / (depth_delta[i])) # normalize, scale to 0-255, and invert
+            if ((x_position < img_width_pixels and x_position >= 0) and (y_position < img_height_pixels and y_position >= 0)):
+                if (image_matrix[i][y_position][x_position][0] < color):
+                    image_matrix[i, y_position, x_position] = color
+                    depth_matrix[i, y_position, x_position] = screen_point_array[i][2][j]
 
     # Save raw depth as csv
-    np.savetxt("depth_matrix.csv", depth_matrix, delimiter=",", newline="\n")
-    # Save extrinsic matrix for camera 1
-    np.savetxt("camera[0]_extrinsic_matrix.csv", camera_extrinsic_matrix[0], delimiter=",", newline="\n")
-    np.savetxt("camera[1]_extrinsic_matrix.csv", camera_extrinsic_matrix[1], delimiter=",", newline="\n")
-    np.savetxt("camera[2]_extrinsic_matrix.csv", camera_extrinsic_matrix[2], delimiter=",", newline="\n")
-    np.savetxt("camera[3]_extrinsic_matrix.csv", camera_extrinsic_matrix[3], delimiter=",", newline="\n")
-
-    # Draw them as an image
-    img = Image.fromarray(image_matrix)
-    img.show()
+    for i in range(camera_count):
+        np.savetxt(f"depth_matrix_{i}.csv", depth_matrix[i], delimiter=",", newline="\n")
+        np.savetxt(f"extrinsic_matrix_{i}.csv", camera_extrinsic_matrix[i], delimiter=",", newline="\n")
+        img = Image.fromarray(image_matrix[i])
+        img.save(f"color_visualization_{i}.png")
 
 if __name__ == "__main__":
     main()
