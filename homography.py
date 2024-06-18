@@ -45,8 +45,8 @@ def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, colu
 
     screen_world_ratio = screen_point / distance_screen
 
-    world_x = screen_x_cm * screen_world_ratio
-    world_y = screen_y_cm * screen_world_ratio
+    world_x = -screen_x_cm * screen_world_ratio
+    world_y = -screen_y_cm * screen_world_ratio
     world_z = focal_length_cm * screen_world_ratio
 
     world_point = np.asarray([world_x, world_y, world_z, 1])
