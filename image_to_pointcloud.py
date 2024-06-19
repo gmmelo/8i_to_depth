@@ -3,7 +3,11 @@ import numpy as np
 import open3d as o3d
 
 def save_to_point_cloud(point_array, filename):
+<<<<<<< HEAD
     new_point_array = np.empty((point_array.shape[0], 3), np.float64)
+=======
+    new_point_array = np.zeros((point_array.size, 3), np.float64)
+>>>>>>> d686c239165eec0bcfc3885e563803a7700bbbf0
     
     for index, point in enumerate(point_array):
         new_point_array[index][0] = point[0]
@@ -20,7 +24,11 @@ def read_matrix(filename):
     return matrix
 
 def transformed_point_cloud(point_array, transformation_matrix):
+<<<<<<< HEAD
     new_point_array = np.empty((point_array.shape[0], 4), np.float64)
+=======
+    new_point_array = np.ones((point_array.size, 4), np.float64)
+>>>>>>> d686c239165eec0bcfc3885e563803a7700bbbf0
 
     for index, point in enumerate(point_array):
         new_point = transformation_matrix @ point
@@ -59,14 +67,14 @@ def screen_to_world(depth_matrix):
 
     # Loop through the depth_matrix and figure out how many valid distance pixels there are (-1 is invalid)
     point_counter = 0
-    for column in depth_matrix:
-        for point in column:
+    for row in depth_matrix:
+        for point in row:
             if point > 0:
                 point_counter += 1
 
     print("There are ", point_counter, " valid points") # Makes sure we are only counting the valid points
 
-    point_array = np.empty((point_counter, 4), np.float64) # Create an array only fit for the valid points. first column is for x, second is for y, third for z, and fourth for homogenous linear algebra
+    point_array = np.ones((point_counter, 4), np.float64) # Create an array only fit for the valid points. first column is for x, second is for y, third for z, and fourth for homogenous linear algebra
 
     # Loop through depth_matrix again, but only process valid points
     index = 0
