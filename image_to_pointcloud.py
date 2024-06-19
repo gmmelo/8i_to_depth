@@ -3,7 +3,7 @@ import numpy as np
 import open3d as o3d
 
 def save_to_point_cloud(point_array, filename):
-    new_point_array = np.empty((point_array.size, 3), np.float64)
+    new_point_array = np.empty((point_array.shape[0], 3), np.float64)
     
     for index, point in enumerate(point_array):
         new_point_array[index][0] = point[0]
@@ -20,7 +20,7 @@ def read_matrix(filename):
     return matrix
 
 def transformed_point_cloud(point_array, transformation_matrix):
-    new_point_array = np.empty((point_array.size, 4), np.float64)
+    new_point_array = np.empty((point_array.shape[0], 4), np.float64)
 
     for index, point in enumerate(point_array):
         new_point = transformation_matrix @ point
