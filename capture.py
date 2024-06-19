@@ -1,8 +1,7 @@
+import os, sys
 import numpy as np
 from PIL import Image, ImageDraw
 import open3d as o3d
-
-camera_count = 4
 
 img_width_cm = 0.24
 img_height_cm = 0.24
@@ -10,6 +9,15 @@ focal_length_cm = 0.1
 img_width_pixels = 1024
 img_height_pixels = 1024
 physical_to_pixels = img_width_pixels / img_width_cm
+
+def read_point_cloud(file_path):
+    point_cloud = o3d.io.read_point_cloud(file_path)
+    
+    if len(point_cloud.points) == 0:
+        print(f"Failed to read point cloud from '{file_path}'")
+        return None
+    else:
+        return point_cloud
 
 def extrinsic_matrix(camera_position_x, camera_position_y, camera_position_z, camera_rotation_x, camera_rotation_y, camera_rotation_z):
     # Rotation in euler angles
@@ -59,8 +67,18 @@ def pinhole_projection(point_3d):
     return np.array([pixel_x, pixel_y, pixel_depth]) 
 
 def main():
+    if len(sys.argv) < 3 or not sys.argv[2].isdigit():
+        print("Usage: python capture.py <point_cloud_filename> <camera_count>")
+        return
+
+    script_location = os.path.dirname(os.path.realpath(__file__))
+    camera_count = int(sys.argv[2])
+
     # Define the 3D point and camera parameters
-    point_load = o3d.io.read_point_cloud("./longdress.ply")
+    point_load = read_point_cloud(f"{script_location}/point_clouds/{sys.argv[1]}")
+    if point_load == None:
+        return
+    
     point_count = len(point_load.points)
     point_array = np.empty((camera_count, point_count, 3), dtype = np.float64)
     screen_point_array = np.empty((camera_count, 3, point_count)) # For each camera, store x, y, and distance of each point in screen cm coordinates
