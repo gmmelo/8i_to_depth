@@ -2,6 +2,25 @@ import sys
 import numpy as np
 import open3d as o3d
 
+def main():
+    if len(sys.argv) < 2 or not sys.argv[1].isdigit():
+        print("Usage: python image_to_pointcloud.py <camera_count>")
+        return
+
+    camera_count = int(sys.argv[1])
+    
+    for i in range(camera_count):
+        depth_matrix = read_matrix(f"depth_matrix_{i}.csv") # Loads csv as 2D numpy array
+        original_extrinsic_matrix = read_matrix(f"extrinsic_matrix_{i}.csv")
+
+        point_array_original = screen_to_world(depth_matrix)
+        inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
+
+        point_array_world = transformed_point_cloud(point_array_original, inverse_original_extrinsic_matrix)
+        
+        save_to_point_cloud(point_array_original, f"original_point_cloud_{i}.ply")
+        save_to_point_cloud(point_array_world, f"visible_point_cloud_{i}.ply")
+
 def save_to_point_cloud(point_array, filename):
     new_point_array = np.empty((point_array.shape[0], 3), np.float64)
     
@@ -77,26 +96,6 @@ def screen_to_world(depth_matrix):
                 index += 1
             
     return point_array
-
-
-def main():
-    if len(sys.argv) < 2 or not sys.argv[1].isdigit():
-        print("Usage: python image_to_pointcloud.py <camera_count>")
-        return
-
-    camera_count = int(sys.argv[1])
-    
-    for i in range(camera_count):
-        depth_matrix = read_matrix(f"depth_matrix_{i}.csv") # Loads csv as 2D numpy array
-        original_extrinsic_matrix = read_matrix(f"extrinsic_matrix_{i}.csv")
-
-        point_array_original = screen_to_world(depth_matrix)
-        inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
-
-        point_array_world = transformed_point_cloud(point_array_original, inverse_original_extrinsic_matrix)
-        
-        save_to_point_cloud(point_array_original, f"original_point_cloud_{i}.ply")
-        save_to_point_cloud(point_array_world, f"visible_point_cloud_{i}.ply")
 
 
 if __name__ == "__main__":

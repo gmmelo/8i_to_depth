@@ -10,62 +10,6 @@ img_width_pixels = 1024
 img_height_pixels = 1024
 physical_to_pixels = img_width_pixels / img_width_cm
 
-def read_point_cloud(file_path):
-    point_cloud = o3d.io.read_point_cloud(file_path)
-    
-    if len(point_cloud.points) == 0:
-        print(f"Failed to read point cloud from '{file_path}'")
-        return None
-    else:
-        return point_cloud
-
-def extrinsic_matrix(camera_position_x, camera_position_y, camera_position_z, camera_rotation_x, camera_rotation_y, camera_rotation_z):
-    # Rotation in euler angles
-    camera_rotation_z *= np.pi / 180
-    camera_rotation_y *= np.pi / 180
-    camera_rotation_x *= np.pi / 180
-
-    # Defining the matrix cells for rotation in order z, y, x
-    n11 = np.cos(camera_rotation_y) * np.cos(camera_rotation_z)
-    n12 = np.sin(camera_rotation_x) * np.sin(camera_rotation_y) * np.cos(camera_rotation_z) - np.cos(camera_rotation_x) * np.sin(camera_rotation_z)
-    n13 = np.cos(camera_rotation_x) * np.sin(camera_rotation_y) * np.cos(camera_rotation_z) + np.sin(camera_rotation_x) * np.sin(camera_rotation_z)
-    n21 = np.cos(camera_rotation_y) * np.sin(camera_rotation_z)
-    n22 = np.sin(camera_rotation_x) * np.sin(camera_rotation_y) * np.sin(camera_rotation_z) + np.cos(camera_rotation_x) * np.cos(camera_rotation_z)
-    n23 = np.cos(camera_rotation_x) * np.sin(camera_rotation_y) * np.sin(camera_rotation_z) - np.sin(camera_rotation_x) * np.cos(camera_rotation_z)
-    n31 = -np.sin(camera_rotation_y)
-    n32 = np.sin(camera_rotation_x) * np.cos(camera_rotation_y)
-    n33 = np.cos(camera_rotation_x) * np.cos(camera_rotation_y)
-
-    camera_extrinsic_matrix = np.array([[n11, n12, n13, camera_position_x],
-                                         [n21, n22, n23, camera_position_y],
-                                         [n31, n32, n33, camera_position_z],
-                                         [  0,   0,   0,                 1]])
-
-    return camera_extrinsic_matrix
-
-def pinhole_projection(point_3d):
-    """
-    Project a 3D point onto a 2D image plane using the pinhole camera model.
-    
-    Arg:
-    - point_3d: A numpy array representing the 3D point in Cartesian coordinates (x, y, z).
-        
-    Returns:
-    - A numpy array representing the 2D projection of the 3D point on the image plane.
-    """
-    
-    # Project the 3D point onto the image plane
-    projection_x = -(focal_length_cm * point_3d[0][0]) / (point_3d[2][0]) # Invert signal because of projection properties
-    projection_y = -(focal_length_cm * point_3d[1][0]) / (point_3d[2][0])
-    projection_h = np.sqrt(point_3d[0][0] ** 2 + point_3d[1][0] ** 2)
-    
-    # Convert to pixel coordinates
-    pixel_x = (projection_x + img_width_cm / 2)
-    pixel_y = (projection_y + img_height_cm / 2)
-    pixel_depth = np.sqrt(projection_h ** 2 + point_3d[2][0] ** 2)
-    
-    return np.array([pixel_x, pixel_y, pixel_depth]) 
-
 def main():
     if len(sys.argv) < 3 or not sys.argv[2].isdigit():
         print("Usage: python capture.py <point_cloud_filename> <camera_count>")
@@ -140,6 +84,62 @@ def main():
         np.savetxt(f"extrinsic_matrix_{i}.csv", camera_extrinsic_matrix[i], delimiter=",", newline="\n")
         img = Image.fromarray(image_matrix[i])
         img.save(f"color_visualization_{i}.png")
+
+def read_point_cloud(file_path):
+    point_cloud = o3d.io.read_point_cloud(file_path)
+    
+    if len(point_cloud.points) == 0:
+        print(f"Failed to read point cloud from '{file_path}'")
+        return None
+    else:
+        return point_cloud
+
+def extrinsic_matrix(camera_position_x, camera_position_y, camera_position_z, camera_rotation_x, camera_rotation_y, camera_rotation_z):
+    # Rotation in euler angles
+    camera_rotation_z *= np.pi / 180
+    camera_rotation_y *= np.pi / 180
+    camera_rotation_x *= np.pi / 180
+
+    # Defining the matrix cells for rotation in order z, y, x
+    n11 = np.cos(camera_rotation_y) * np.cos(camera_rotation_z)
+    n12 = np.sin(camera_rotation_x) * np.sin(camera_rotation_y) * np.cos(camera_rotation_z) - np.cos(camera_rotation_x) * np.sin(camera_rotation_z)
+    n13 = np.cos(camera_rotation_x) * np.sin(camera_rotation_y) * np.cos(camera_rotation_z) + np.sin(camera_rotation_x) * np.sin(camera_rotation_z)
+    n21 = np.cos(camera_rotation_y) * np.sin(camera_rotation_z)
+    n22 = np.sin(camera_rotation_x) * np.sin(camera_rotation_y) * np.sin(camera_rotation_z) + np.cos(camera_rotation_x) * np.cos(camera_rotation_z)
+    n23 = np.cos(camera_rotation_x) * np.sin(camera_rotation_y) * np.sin(camera_rotation_z) - np.sin(camera_rotation_x) * np.cos(camera_rotation_z)
+    n31 = -np.sin(camera_rotation_y)
+    n32 = np.sin(camera_rotation_x) * np.cos(camera_rotation_y)
+    n33 = np.cos(camera_rotation_x) * np.cos(camera_rotation_y)
+
+    camera_extrinsic_matrix = np.array([[n11, n12, n13, camera_position_x],
+                                         [n21, n22, n23, camera_position_y],
+                                         [n31, n32, n33, camera_position_z],
+                                         [  0,   0,   0,                 1]])
+
+    return camera_extrinsic_matrix
+
+def pinhole_projection(point_3d):
+    """
+    Project a 3D point onto a 2D image plane using the pinhole camera model.
+    
+    Arg:
+    - point_3d: A numpy array representing the 3D point in Cartesian coordinates (x, y, z).
+        
+    Returns:
+    - A numpy array representing the 2D projection of the 3D point on the image plane.
+    """
+    
+    # Project the 3D point onto the image plane
+    projection_x = -(focal_length_cm * point_3d[0][0]) / (point_3d[2][0]) # Invert signal because of projection properties
+    projection_y = -(focal_length_cm * point_3d[1][0]) / (point_3d[2][0])
+    projection_h = np.sqrt(point_3d[0][0] ** 2 + point_3d[1][0] ** 2)
+    
+    # Convert to pixel coordinates
+    pixel_x = (projection_x + img_width_cm / 2)
+    pixel_y = (projection_y + img_height_cm / 2)
+    pixel_depth = np.sqrt(projection_h ** 2 + point_3d[2][0] ** 2)
+    
+    return np.array([pixel_x, pixel_y, pixel_depth]) 
 
 if __name__ == "__main__":
     main()
