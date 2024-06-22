@@ -57,7 +57,7 @@ def main():
     # Image matrix is for color data, depth matrix is form raw distance data
     image_matrix_low = np.zeros((camera_count, img_height_pixels, img_width_pixels, 3), np.uint8)
     image_matrix_high = np.zeros((camera_count, img_height_pixels, img_width_pixels, 3), np.uint8)
-    depth_matrix = np.full((camera_count, img_height_pixels, img_width_pixels), -1, np.float16) # Fill with -1 as an invalid distance value
+    depth_matrix = np.zeros((camera_count, img_height_pixels, img_width_pixels), np.float16)
 
     depth_max = np.empty((camera_count))
     depth_min = np.empty((camera_count))
@@ -75,7 +75,8 @@ def main():
             depth = screen_point_array[i][2][j]
             color_low, color_high = float16_to_two_int8(depth)
             if ((x_position < img_width_pixels and x_position >= 0) and (y_position < img_height_pixels and y_position >= 0)):
-                if (depth_matrix[i][y_position][x_position] < depth):
+                # Check if current point is closer than the one currently at the pixel or if the pixel is blank
+                if (depth_matrix[i][y_position][x_position] > depth or abs(depth_matrix[i][y_position][x_position]) < 0.1): 
                     image_matrix_low[i, y_position, x_position, 2] = color_low
                     image_matrix_high[i, y_position, x_position, 2] = color_high
                     depth_matrix[i, y_position, x_position] = depth
@@ -90,7 +91,7 @@ def main():
         img_high.save(f"color_visualization_high_{i}.png")
 
 def float16_to_two_int8(float16):
-    int16 = np.float16(float16).view(np.int16) # Convert to int16 while keeping the bits intact
+    int16 = np.float16(float16).view(np.uint16) # Convert to int16 while keeping the bits intact
 
     low_int8 = int16 & 0x00FF
     high_int8 = (int16 >> 8) & 0x00FF

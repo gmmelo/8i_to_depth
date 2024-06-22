@@ -11,7 +11,9 @@ def main():
     camera_count = int(sys.argv[1])
     
     for i in range(camera_count):
-        depth_matrix = read_matrix(f"depth_matrix_{i}.csv") # Loads csv as 2D numpy array
+        # Loads two 8-bit int images as a 16-bit numpy matrix containing depth info
+        depth_matrix = read_low_high_images(f"color_visualization_low_{i}.png", f"color_visualization_high_{i}.png")
+
         original_extrinsic_matrix = read_matrix(f"extrinsic_matrix_{i}.csv")
 
         point_array_original = screen_to_world(depth_matrix)
@@ -39,14 +41,31 @@ def read_matrix(filename):
     matrix = np.loadtxt(open(filename, "rb"), delimiter = ",")
     return matrix
 
+def read_low_high_images(low_filename, high_filename):
+    low_image = read_image_as_matrix(low_filename)
+    high_image = read_image_as_matrix(high_filename)
+    float16_image = np.zeros((low_image.shape[0], low_image.shape[1]), np.float16)
+
+    for y_index, row in enumerate(low_image):
+        for x_index, low_pixel in enumerate(row):
+            high_pixel = high_image[y_index][x_index]
+            if (low_pixel != 0 or high_pixel != 0):
+                int16_pixel = (high_pixel << 8) | low_pixel
+                float16_pixel = np.uint16(int16_pixel).view(np.float16)
+                float16_image[y_index][x_index] = float16_pixel
+            
+            
+    return float16_image
+
 def read_image_as_matrix(filename):
+    # This reads the image's blue channel and saves it to a brightness single channel matrix
     rgb_image = Image.open(filename)
     rgb_matrix = np.asarray(rgb_image)
     brightness_matrix = np.empty((rgb_image.height, rgb_image.width), rgb_matrix.dtype)
     print(f"image_dtype: {rgb_matrix.dtype}")
     for row_index, row in enumerate(brightness_matrix):
         for column_index, pixel in enumerate(row):
-            pixel = rgb_matrix[row_index][column_index][0]
+            pixel = rgb_matrix[row_index][column_index][2] # Blue channel
             brightness_matrix[row_index][column_index] = pixel
 
     return brightness_matrix
