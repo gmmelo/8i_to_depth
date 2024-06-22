@@ -24,9 +24,9 @@ def main():
         return
     
     point_count = len(point_load.points)
-    point_array = np.empty((camera_count, point_count, 3), dtype = np.float64)
+    point_array = np.empty((camera_count, point_count, 3), dtype = np.float16)
     screen_point_array = np.empty((camera_count, 3, point_count)) # For each camera, store x, y, and distance of each point in screen cm coordinates
-    camera_extrinsic_matrix = np.empty((camera_count, 4, 4), dtype = np.float64)
+    camera_extrinsic_matrix = np.empty((camera_count, 4, 4), dtype = np.float16)
 
     for i in range(camera_count):
         point_array[i] = np.asarray(point_load.points)
@@ -55,8 +55,9 @@ def main():
                 print(f"point {point_index} successfully processed for camera {camera_index}")
 
     # Image matrix is for color data, depth matrix is form raw distance data
-    image_matrix = np.zeros((camera_count, img_height_pixels, img_width_pixels, 3), np.uint8)
-    depth_matrix = np.full((camera_count, img_height_pixels, img_width_pixels), -1, np.float64) # Fill with -1 as an invalid distance value
+    image_matrix_low = np.zeros((camera_count, img_height_pixels, img_width_pixels, 3), np.uint8)
+    image_matrix_high = np.zeros((camera_count, img_height_pixels, img_width_pixels, 3), np.uint8)
+    depth_matrix = np.full((camera_count, img_height_pixels, img_width_pixels), -1, np.float16) # Fill with -1 as an invalid distance value
 
     depth_max = np.empty((camera_count))
     depth_min = np.empty((camera_count))
@@ -72,18 +73,29 @@ def main():
             x_position = int(screen_point_array[i][0][j] * physical_to_pixels)
             y_position = int(screen_point_array[i][1][j] * physical_to_pixels)
             depth = screen_point_array[i][2][j]
-            color = 255 * (1 - (depth - depth_min[i]) / (depth_delta[i])) # normalize, scale to 0-255, and invert
+            color_low, color_high = float16_to_two_int8(depth)
             if ((x_position < img_width_pixels and x_position >= 0) and (y_position < img_height_pixels and y_position >= 0)):
-                if (image_matrix[i][y_position][x_position][0] < color):
-                    image_matrix[i, y_position, x_position] = color
-                    depth_matrix[i, y_position, x_position] = screen_point_array[i][2][j]
+                if (depth_matrix[i][y_position][x_position] < depth):
+                    image_matrix_low[i, y_position, x_position, 2] = color_low
+                    image_matrix_high[i, y_position, x_position, 2] = color_high
+                    depth_matrix[i, y_position, x_position] = depth
 
     # Save raw depth as csv
     for i in range(camera_count):
         np.savetxt(f"depth_matrix_{i}.csv", depth_matrix[i], delimiter=",", newline="\n")
         np.savetxt(f"extrinsic_matrix_{i}.csv", camera_extrinsic_matrix[i], delimiter=",", newline="\n")
-        img = Image.fromarray(image_matrix[i])
-        img.save(f"color_visualization_{i}.png")
+        img_low = Image.fromarray(image_matrix_low[i])
+        img_high = Image.fromarray(image_matrix_high[i])
+        img_low.save(f"color_visualization_low_{i}.png")
+        img_high.save(f"color_visualization_high_{i}.png")
+
+def float16_to_two_int8(float16):
+    int16 = np.float16(float16).view(np.int16) # Convert to int16 while keeping the bits intact
+
+    low_int8 = int16 & 0x00FF
+    high_int8 = (int16 >> 8) & 0x00FF
+
+    return low_int8, high_int8
 
 def read_point_cloud(file_path):
     point_cloud = o3d.io.read_point_cloud(file_path)

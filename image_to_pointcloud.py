@@ -23,7 +23,7 @@ def main():
         save_to_point_cloud(point_array_world, f"visible_point_cloud_{i}.ply")
 
 def save_to_point_cloud(point_array, filename):
-    new_point_array = np.empty((point_array.shape[0], 3), np.float64)
+    new_point_array = np.empty((point_array.shape[0], 3), np.float16)
     
     for index, point in enumerate(point_array):
         new_point_array[index][0] = point[0]
@@ -52,7 +52,7 @@ def read_image_as_matrix(filename):
     return brightness_matrix
 
 def transformed_point_cloud(point_array, transformation_matrix):
-    new_point_array = np.empty((point_array.shape[0], 4), np.float64)
+    new_point_array = np.empty((point_array.shape[0], 4), np.float16)
 
     for index, point in enumerate(point_array):
         new_point = transformation_matrix @ point
@@ -98,7 +98,7 @@ def screen_to_world(depth_matrix):
 
     print("There are ", point_counter, " valid points") # Makes sure we are only counting the valid points
 
-    point_array = np.empty((point_counter, 4), np.float64) # Create an array only fit for the valid points. first column is for x, second is for y, third for z, and fourth for homogenous linear algebra
+    point_array = np.empty((point_counter, 4), np.float16) # Create an array only fit for the valid points. first column is for x, second is for y, third for z, and fourth for homogenous linear algebra
 
     # Loop through depth_matrix again, but only process valid points
     index = 0
