@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import open3d as o3d
+from PIL import Image
 
 def main():
     if len(sys.argv) < 2 or not sys.argv[1].isdigit():
@@ -37,6 +38,18 @@ def save_to_point_cloud(point_array, filename):
 def read_matrix(filename):
     matrix = np.loadtxt(open(filename, "rb"), delimiter = ",")
     return matrix
+
+def read_image_as_matrix(filename):
+    rgb_image = Image.open(filename)
+    rgb_matrix = np.asarray(rgb_image)
+    brightness_matrix = np.empty((rgb_image.height, rgb_image.width), rgb_matrix.dtype)
+    print(f"image_dtype: {rgb_matrix.dtype}")
+    for row_index, row in enumerate(brightness_matrix):
+        for column_index, pixel in enumerate(row):
+            pixel = rgb_matrix[row_index][column_index][0]
+            brightness_matrix[row_index][column_index] = pixel
+
+    return brightness_matrix
 
 def transformed_point_cloud(point_array, transformation_matrix):
     new_point_array = np.empty((point_array.shape[0], 4), np.float64)
