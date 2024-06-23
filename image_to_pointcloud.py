@@ -82,8 +82,6 @@ def read_image_as_matrix(filename):
     
     return output_matrix
 
-    
-
 def transformed_point_cloud(point_array, transformation_matrix):
     new_point_array = np.empty((point_array.shape[0], 4), np.float16)
 
