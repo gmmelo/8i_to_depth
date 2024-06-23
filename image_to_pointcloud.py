@@ -12,7 +12,7 @@ def main():
     
     for i in range(camera_count):
         # Loads two 8-bit int images as a 16-bit numpy matrix containing depth info
-        depth_matrix = read_low_high_images(f"color_visualization_low_{i}.png", f"color_visualization_high_{i}.png")
+        depth_matrix = read_low_high_images(f"depth_visualization_low_{i}.png", f"depth_visualization_high_{i}.png")
         color_matrix = read_image_as_matrix(f"color_visualization_{i}.png", color=True)
 
         depth_camera_extrinsic_matrix = read_matrix(f"depth_camera_extrinsic_matrix_{i}.csv")
