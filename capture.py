@@ -70,6 +70,7 @@ def main():
     for i in range(camera_count):
         np.savetxt(f"depth_matrix_float16_{i}.csv", depth_matrix_float16[i], delimiter=",", newline="\n")
         np.savetxt(f"depth_camera_extrinsic_matrix_{i}.csv", depth_camera_extrinsic_matrix[i], delimiter=",", newline="\n")
+        np.savetxt(f"color_camera_extrinsic_matrix_{i}.csv", color_camera_extrinsic_matrix[i], delimiter=",", newline="\n")
         img_low = Image.fromarray(depth_matrix_low[i])
         img_high = Image.fromarray(depth_matrix_high[i])
         img_color = Image.fromarray(color_matrix[i])

@@ -13,27 +13,30 @@ def main():
     for i in range(camera_count):
         # Loads two 8-bit int images as a 16-bit numpy matrix containing depth info
         depth_matrix = read_low_high_images(f"color_visualization_low_{i}.png", f"color_visualization_high_{i}.png")
+        color_matrix = read_image_as_matrix(f"color_visualization_{i}.png", color=True)
 
-        original_extrinsic_matrix = read_matrix(f"depth_camera_extrinsic_matrix_{i}.csv")
+        depth_camera_extrinsic_matrix = read_matrix(f"depth_camera_extrinsic_matrix_{i}.csv")
+        color_camera_extrinsic_matrix = read_matrix(f"color_camera_extrinsic_matrix_{i}.csv")
 
-        point_array_original = screen_to_world(depth_matrix)
-        inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
+        point_coordinate_array_original, point_color_array = screen_to_world(depth_matrix, color_matrix)
+        inverse_depth_camera_extrinsic_matrix = np.linalg.inv(depth_camera_extrinsic_matrix)
 
-        point_array_world = transformed_point_cloud(point_array_original, inverse_original_extrinsic_matrix)
+        point_coordinate_array_world = transformed_point_cloud(point_coordinate_array_original, inverse_depth_camera_extrinsic_matrix)
         
-        save_to_point_cloud(point_array_original, f"original_point_cloud_{i}.ply")
-        save_to_point_cloud(point_array_world, f"visible_point_cloud_{i}.ply")
+        save_to_point_cloud(point_coordinate_array_original, point_color_array, f"original_point_cloud_{i}.ply")
+        save_to_point_cloud(point_coordinate_array_world, point_color_array, f"transformed_point_cloud_{i}.ply")
 
-def save_to_point_cloud(point_array, filename):
-    new_point_array = np.empty((point_array.shape[0], 3), np.float16)
+def save_to_point_cloud(point_coordinate_array, point_color_array, filename):
+    new_point_coordinate_array = np.empty((point_coordinate_array.shape[0], 3), np.float16)
     
-    for index, point in enumerate(point_array):
-        new_point_array[index][0] = point[0]
-        new_point_array[index][1] = point[1]
-        new_point_array[index][2] = point[2]
+    for index, point in enumerate(point_coordinate_array):
+        new_point_coordinate_array[index][1] = point[1]
+        new_point_coordinate_array[index][2] = point[2]
+        new_point_coordinate_array[index][0] = point[0]
 
     new_point_cloud = o3d.geometry.PointCloud()
-    new_point_cloud.points = o3d.utility.Vector3dVector(new_point_array)
+    new_point_cloud.points = o3d.utility.Vector3dVector(new_point_coordinate_array)
+    new_point_cloud.colors = o3d.utility.Vector3dVector(point_color_array)
     o3d.io.write_point_cloud(filename, new_point_cloud)
     
 
@@ -57,18 +60,24 @@ def read_low_high_images(low_filename, high_filename):
             
     return float16_image
 
-def read_image_as_matrix(filename):
+def read_image_as_matrix(filename, color=False):
     # This reads the image's blue channel and saves it to a brightness single channel matrix
     rgb_image = Image.open(filename)
     rgb_matrix = np.asarray(rgb_image)
-    brightness_matrix = np.empty((rgb_image.height, rgb_image.width), rgb_matrix.dtype)
+    if (color == False):
+        output_matrix = np.empty((rgb_image.height, rgb_image.width), rgb_matrix.dtype)
+    else:
+        output_matrix = np.empty((rgb_image.height, rgb_image.width, 3), rgb_matrix.dtype)
     print(f"image_dtype: {rgb_matrix.dtype}")
-    for row_index, row in enumerate(brightness_matrix):
+    for row_index, row in enumerate(output_matrix):
         for column_index, pixel in enumerate(row):
-            pixel = rgb_matrix[row_index][column_index][2] # Blue channel
-            brightness_matrix[row_index][column_index] = pixel
+            if (color == False):
+                pixel = rgb_matrix[row_index][column_index][2] # Blue channel
+            else:
+                pixel = rgb_matrix[row_index][column_index]
+            output_matrix[row_index][column_index] = pixel
 
-    return brightness_matrix
+    return output_matrix
 
 def transformed_point_cloud(point_array, transformation_matrix):
     new_point_array = np.empty((point_array.shape[0], 4), np.float16)
@@ -105,7 +114,7 @@ def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, colu
 
     return world_point
 
-def screen_to_world(depth_matrix):
+def screen_to_world(depth_matrix, color_matrix):
     img_height_pixels, img_width_pixels = depth_matrix.shape
 
     # Loop through the depth_matrix and figure out how many valid distance pixels there are (-1 is invalid)
@@ -117,17 +126,24 @@ def screen_to_world(depth_matrix):
 
     print("There are ", point_counter, " valid points") # Makes sure we are only counting the valid points
 
-    point_array = np.empty((point_counter, 4), np.float16) # Create an array only fit for the valid points. first column is for x, second is for y, third for z, and fourth for homogenous linear algebra
+    point_coordinate_array = np.empty((point_counter, 4), np.float16) # Create an array only fit for the valid points. first column is for x, second is for y, third for z, and fourth for homogenous linear algebra
+    point_color_array = np.empty((point_counter, 3), np.float16) # RGB info
 
     # Loop through depth_matrix again, but only process valid points
     index = 0
     for row_index, row in enumerate(depth_matrix):
-        for col_index, point in enumerate(row):
-            if point > 0:
-                point_array[index] = inverse_pinhole(point, img_width_pixels, img_height_pixels, row_index, col_index)
+        for col_index, depth_pixel in enumerate(row):
+            if depth_pixel > 0:
+                red = color_matrix[row_index, col_index, 0] / float(255)
+                green = color_matrix[row_index, col_index, 2] / float(255)
+                blue = color_matrix[row_index, col_index, 1] / float(255)
+                color_pixel = np.array([red, green, blue])
+
+                point_coordinate_array[index] = inverse_pinhole(depth_pixel, img_width_pixels, img_height_pixels, row_index, col_index)
+                point_color_array[index] = color_pixel
                 index += 1
             
-    return point_array
+    return point_coordinate_array, point_color_array
 
 
 if __name__ == "__main__":
