@@ -30,7 +30,8 @@ def main():
     if point_load == None:
         return
     point_count = len(point_load.points)
-    point_array = np.asarray(point_load.points)
+    point_coordinate_array = np.asarray(point_load.points)
+    point_color_array = np.asarray(point_load.colors)
     
     #  Define extrinsic matrix for each camera
     depth_camera_extrinsic_matrix = np.empty((camera_count, 4, 4), np.float16)
@@ -50,8 +51,7 @@ def main():
     depth_min = np.empty((camera_count))
     depth_delta = np.empty((camera_count))
 
-    screen_point_depth_array = rasterize_points_to_matrix(camera_count, point_array, depth_camera_extrinsic_matrix)
-    print(f"Point shape: {point_array.shape}")
+    screen_point_depth_array = rasterize_points_to_matrix(camera_count, point_coordinate_array, depth_camera_extrinsic_matrix)
 
     for i in range(camera_count):
         depth_max[i] = max(screen_point_depth_array[i][2])
@@ -81,17 +81,18 @@ def main():
         img_low.save(f"color_visualization_low_{i}.png")
         img_high.save(f"color_visualization_high_{i}.png")
 
-def rasterize_points_to_matrix(camera_count, point_array, depth_camera_extrinsic_matrix):
+def rasterize_points_to_matrix(camera_count, point_coordinate_array, depth_camera_extrinsic_matrix):
+    point_count = point_coordinate_array.shape[0]
     # Create progress markers
     marker_counter = 4
-    progress_markers = create_progress_markers(marker_counter, point_array.shape[0])
+    progress_markers = create_progress_markers(marker_counter, point_count)
     marker_index = 0
     print(progress_markers)
 
-    screen_point_depth_array = np.empty((camera_count, 3, point_array.shape[0]), np.float16) # For each camera, store x, y, and distance of each point in screen cm coordinates
+    screen_point_depth_array = np.empty((camera_count, 3, point_count), np.float16) # For each camera, store x, y, and distance of each point in screen cm coordinates
     # Loop through point cloud and add rasterized points to a list
     for camera_index in range(camera_count):
-        for point_index, world_point in enumerate(point_array):
+        for point_index, world_point in enumerate(point_coordinate_array):
             world_point_homogeneous = np.array([[world_point[0]],
                                                 [world_point[1]],
                                                 [world_point[2]],
