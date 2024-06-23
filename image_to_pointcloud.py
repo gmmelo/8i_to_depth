@@ -14,7 +14,7 @@ def main():
         # Loads two 8-bit int images as a 16-bit numpy matrix containing depth info
         depth_matrix = read_low_high_images(f"color_visualization_low_{i}.png", f"color_visualization_high_{i}.png")
 
-        original_extrinsic_matrix = read_matrix(f"extrinsic_matrix_{i}.csv")
+        original_extrinsic_matrix = read_matrix(f"depth_camera_extrinsic_matrix_{i}.csv")
 
         point_array_original = screen_to_world(depth_matrix)
         inverse_original_extrinsic_matrix = np.linalg.inv(original_extrinsic_matrix)
