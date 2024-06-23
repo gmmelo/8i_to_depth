@@ -135,8 +135,8 @@ def screen_to_world(depth_matrix, color_matrix):
         for col_index, depth_pixel in enumerate(row):
             if depth_pixel > 0:
                 red = color_matrix[row_index, col_index, 0] / float(255)
-                green = color_matrix[row_index, col_index, 2] / float(255)
-                blue = color_matrix[row_index, col_index, 1] / float(255)
+                green = color_matrix[row_index, col_index, 1] / float(255)
+                blue = color_matrix[row_index, col_index, 2] / float(255)
                 color_pixel = np.array([red, green, blue])
 
                 point_coordinate_array[index] = inverse_pinhole(depth_pixel, img_width_pixels, img_height_pixels, row_index, col_index)
