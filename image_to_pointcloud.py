@@ -12,8 +12,8 @@ def main():
     
     for i in range(camera_count):
         # Loads two 8-bit int images as a 16-bit numpy matrix containing depth info
-        depth_matrix = read_low_high_images(f"depth_visualization_low_{i}.png", f"depth_visualization_high_{i}.png")
-        color_matrix = read_image_as_matrix(f"color_visualization_{i}.png", color=True)
+        depth_matrix = read_low_high_image(f"output.png")
+        color_matrix = read_image_as_matrix(f"test_calibration_color_{i}.png")
 
         depth_camera_extrinsic_matrix = read_matrix(f"depth_camera_extrinsic_matrix_{i}.csv")
         color_camera_extrinsic_matrix = read_matrix(f"color_camera_extrinsic_matrix_{i}.csv")
@@ -44,40 +44,45 @@ def read_matrix(filename):
     matrix = np.loadtxt(open(filename, "rb"), delimiter = ",")
     return matrix
 
-def read_low_high_images(low_filename, high_filename):
-    low_image = read_image_as_matrix(low_filename)
-    high_image = read_image_as_matrix(high_filename)
-    float16_image = np.zeros((low_image.shape[0], low_image.shape[1]), np.float16)
+def read_low_high_image(filename):
+    image = read_image_as_matrix(filename)
+    low_image = image[:, :, 2]
+    high_image = image[:, :, 1]
+    float64_image = np.zeros((low_image.shape[0], low_image.shape[1]), np.float64)
 
     for y_index, row in enumerate(low_image):
         for x_index, low_pixel in enumerate(row):
             high_pixel = high_image[y_index][x_index]
             if (low_pixel != 0 or high_pixel != 0):
                 int16_pixel = (high_pixel << 8) | low_pixel
-                float16_pixel = np.uint16(int16_pixel).view(np.float16)
-                float16_image[y_index][x_index] = float16_pixel
+                float64_pixel = np.uint16(int16_pixel).view(np.float16) * (2**24)
+                float64_image[y_index][x_index] = float64_pixel
+                # print(f"lp, hp, fp: {low_pixel, high_pixel, float16_pixel}")
             
             
-    return float16_image
+    return float64_image
 
-def read_image_as_matrix(filename, color=False):
+def read_image_as_matrix(filename):
     # This reads the image's blue channel and saves it to a brightness single channel matrix
     rgb_image = Image.open(filename)
     rgb_matrix = np.asarray(rgb_image)
-    if (color == False):
-        output_matrix = np.empty((rgb_image.height, rgb_image.width), rgb_matrix.dtype)
-    else:
-        output_matrix = np.empty((rgb_image.height, rgb_image.width, 3), rgb_matrix.dtype)
+
+    print(f"rgb image shape: {rgb_matrix.shape}")
+    if (rgb_matrix.shape[2] == 4):
+        rgb_matrix = np.delete(rgb_matrix, (3), axis=2)
+    print(f"rgb image shape: {rgb_matrix.shape}")
+
+    
+    output_matrix = np.empty((rgb_image.height, rgb_image.width, 3), rgb_matrix.dtype)
     print(f"image_dtype: {rgb_matrix.dtype}")
     for row_index, row in enumerate(output_matrix):
         for column_index, pixel in enumerate(row):
-            if (color == False):
-                pixel = rgb_matrix[row_index][column_index][2] # Blue channel
-            else:
-                pixel = rgb_matrix[row_index][column_index]
+            pixel = rgb_matrix[row_index][column_index]
             output_matrix[row_index][column_index] = pixel
-
+    
     return output_matrix
+
+    
 
 def transformed_point_cloud(point_array, transformation_matrix):
     new_point_array = np.empty((point_array.shape[0], 4), np.float16)
@@ -89,9 +94,9 @@ def transformed_point_cloud(point_array, transformation_matrix):
     return new_point_array
 
 def inverse_pinhole(screen_point, img_width_pixels, img_height_pixels, row, column):
-    focal_length_cm = 0.1
+    focal_length_cm = 0.2
     img_width_cm = 0.24
-    img_height_cm = 0.24
+    img_height_cm = 0.216
     px_to_cm_x = img_width_cm / float(img_width_pixels)
     px_to_cm_y = img_height_cm / float(img_height_pixels)
 
