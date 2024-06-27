@@ -6,9 +6,10 @@ def main():
     width, height = 640, 576
 
     high_byte, low_byte = read_raw_data("output.raw", width, height)
-    img = create_image_from_data(high_byte, low_byte, width, height)
+    img_low, img_high = create_images_from_data(high_byte, low_byte, width, height)
 
-    img.save("output.png")
+    img_low.save("depth_low.png")
+    img_high.save("depth_high.png")
     print("did it")
 
 def read_raw_data(file_path, width, height):
@@ -24,15 +25,17 @@ def read_raw_data(file_path, width, height):
 
     return high_byte, low_byte
 
-def create_image_from_data(high_byte, low_byte, width, height):
-    img = np.zeros((height, width, 3), dtype=np.uint8)
+def create_images_from_data(high_byte, low_byte, width, height):
+    img_high = np.zeros((height, width, 3), dtype=np.uint8)
+    img_low = np.zeros((height, width, 3), dtype=np.uint8)
 
-    img[:, :, 1] = high_byte
-    img[:, :, 2] = low_byte
+    img_high[:, :, 2] = high_byte
+    img_low[:, :, 2] = low_byte
 
-    img = Image.fromarray(img)
+    img_low = Image.fromarray(img_low)
+    img_high = Image.fromarray(img_high)
 
-    return img
+    return img_low, img_high
 
 if __name__ == "__main__":
     main()
