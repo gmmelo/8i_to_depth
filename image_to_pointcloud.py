@@ -12,19 +12,24 @@ def main():
     
     for i in range(camera_count):
         # Loads two 8-bit int images as a 16-bit numpy matrix containing depth info
-        depth_matrix = read_low_high_image(f"output.png")
-        color_matrix = read_image_as_matrix(f"test_calibration_color_{i}.png")
+        low_depth_matrix = read_image_as_matrix(f"compressed_depth_low.png")
+        low_depth_matrix = low_depth_matrix[:, :, 2]
+        high_depth_matrix = read_image_as_matrix(f"compressed_depth_high.png")
+        high_depth_matrix = high_depth_matrix[:, :, 2]
 
-        depth_camera_extrinsic_matrix = read_matrix(f"depth_camera_extrinsic_matrix_{i}.csv")
-        color_camera_extrinsic_matrix = read_matrix(f"color_camera_extrinsic_matrix_{i}.csv")
+        depth_matrix = join_low_high_matrices(low_depth_matrix, high_depth_matrix)
+        color_matrix = read_image_as_matrix(f"uncompressed_color_calibrated.png")
+
+        # depth_camera_extrinsic_matrix = read_matrix(f"depth_camera_extrinsic_matrix_{i}.csv")
+        # color_camera_extrinsic_matrix = read_matrix(f"color_camera_extrinsic_matrix_{i}.csv")
 
         point_coordinate_array_original, point_color_array = screen_to_world(depth_matrix, color_matrix)
-        inverse_depth_camera_extrinsic_matrix = np.linalg.inv(depth_camera_extrinsic_matrix)
+        # inverse_depth_camera_extrinsic_matrix = np.linalg.inv(depth_camera_extrinsic_matrix)
 
-        point_coordinate_array_world = transformed_point_cloud(point_coordinate_array_original, inverse_depth_camera_extrinsic_matrix)
+        # point_coordinate_array_world = transformed_point_cloud(point_coordinate_array_original, inverse_depth_camera_extrinsic_matrix)
         
         save_to_point_cloud(point_coordinate_array_original, point_color_array, f"original_point_cloud_{i}.ply")
-        save_to_point_cloud(point_coordinate_array_world, point_color_array, f"transformed_point_cloud_{i}.ply")
+        # save_to_point_cloud(point_coordinate_array_world, point_color_array, f"transformed_point_cloud_{i}.ply")
 
 def save_to_point_cloud(point_coordinate_array, point_color_array, filename):
     new_point_coordinate_array = np.empty((point_coordinate_array.shape[0], 3), np.float16)
@@ -48,6 +53,10 @@ def read_low_high_image(filename):
     image = read_image_as_matrix(filename)
     low_image = image[:, :, 2]
     high_image = image[:, :, 1]
+
+    return join_low_high_matrices(low_image, high_image)
+
+def join_low_high_matrices(low_image, high_image):
     float64_image = np.zeros((low_image.shape[0], low_image.shape[1]), np.float64)
 
     for y_index, row in enumerate(low_image):
@@ -58,8 +67,7 @@ def read_low_high_image(filename):
                 float64_pixel = np.uint16(int16_pixel).view(np.float16) * (2**24)
                 float64_image[y_index][x_index] = float64_pixel
                 # print(f"lp, hp, fp: {low_pixel, high_pixel, float16_pixel}")
-            
-            
+        
     return float64_image
 
 def read_image_as_matrix(filename):
